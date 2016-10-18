@@ -1,6 +1,5 @@
 ## Load Libraries
 library(plyr)
-library(reshape2)
 ## Download and Unzip Data File
 url<-"https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
 file<-"temp.zip"
@@ -56,7 +55,7 @@ activities<-tolower(activities)
 activities<-gsub("_","",activities)
 levels(tidydata$activity)<-activities
 ## Create Mean Tidydata
-melttidydata<-melt(tidydata,id.vars=c("subjectid","activity"))
-meantidydata<-ddply(melttidydata, .(subjectid, activity), summarise, meanvalue=mean(value))
+meantidydata<-aggregate(.~subjectid+activity, tidydata, mean)
+meantidydata<-meantidydata[order(meantidydata$subjectid, meantidydata$activity),]
 ## Write Result 
 write.table(meantidydata,file="tidydata.txt",row.name=FALSE)

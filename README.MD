@@ -25,14 +25,13 @@ Task:
 
 ## Special Notes For Peer Review
 
-* Plyr and Reshape2 packages are required.
+* Plyr package are required.
 * Variables contains meanfreq() are not included. 
 
 ## Code Markdown
 * Load Libraries
 ```
 library(plyr)
-library(reshape2)
 ```
 * Download and Unzip Data File
 ```
@@ -41,36 +40,51 @@ file<-"temp.zip"
 download.file(url,file)
 unzip(file)
 ```
-* Read Data
+* Read activity labels from activity_labels.txt
 ```
 activities<-read.table("UCI HAR Dataset/activity_labels.txt")
 activities<-as.character(activities$V2)
+```
+* Read features list from features.txt
+```
 features<-read.table("UCI HAR Dataset/features.txt")
 features<-as.character(features$V2)
+```
+* Read test data from X_test.txt, y_test.txt and subject_test.txt
+```
 testX<-read.table("UCI HAR Dataset/test/X_test.txt")
 testY<-read.table("UCI HAR Dataset/test/y_test.txt")
 testsubject<-read.table("UCI HAR Dataset/test/subject_test.txt")
+```
+* Read test data from X_train.txt, y_train.txt and subject_train.txt
+```
 trainX<-read.table("UCI HAR Dataset/train/X_train.txt")
 trainY<-read.table("UCI HAR Dataset/train/y_train.txt")
 trainsubject<-read.table("UCI HAR Dataset/train/subject_train.txt")
 ```
-* Rename Colnames and Combine Test and Train Data
+* Rename column names and combine test data
 ```
 colnames(testX)<-features
 colnames(testY)<-"activity"
 colnames(testsubject)<-"subjectid"
 testdata<-cbind(testsubject,testY,testX)
+```
+* Rename column names and combine train data
+```
 colnames(trainX)<-features
 colnames(trainY)<-"activity"
 colnames(trainsubject)<-"subjectid"
 traindata<-cbind(trainsubject,trainY,trainX)
+```
+* Combine test and train data
+```
 totaldata<-rbind(testdata,traindata)
 ```
 * Subset data with mean() and std()
 ```
 tidydata<-cbind(totaldata[,1:2],totaldata[, grep("mean\\(|std\\(",names(totaldata))])
 ```
-*  Rename Variables using Descriptive Names
+*  Rename variables using descriptive names
 ```
 col<-colnames(tidydata)
 col<-tolower(col)  ## Change to lower case
@@ -86,19 +100,19 @@ col<-gsub("\\-y", "intheydirection", col)
 col<-gsub("\\-z", "inthezdirection", col)
 colnames(tidydata)<-col ## Update Column Names
 ```
-* Change Acvitity ID to Activity Names
+* Change acvitity ID to activity names
 ```
 tidydata$activity<-as.factor(tidydata$activity)
 activities<-tolower(activities)
 activities<-gsub("_","",activities)
 levels(tidydata$activity)<-activities
 ```
-* Create New Tidydata set
+* Create new data set for mean values
 ```
-melttidydata<-melt(tidydata,id.vars=c("subjectid","activity"))
-meantidydata<-ddply(melttidydata, .(subjectid, activity), summarise, meanvalue=mean(value))
+meantidydata<-aggregate(.~subjectid+activity, tidydata, mean)
+meantidydata<-meantidydata[order(meantidydata$subjectid, meantidydata$activity),]
 ```
-* Write Result 
+* Write result 
 ```
 write.table(meantidydata,file="tidydata.txt",row.name=FALSE)
 ```
